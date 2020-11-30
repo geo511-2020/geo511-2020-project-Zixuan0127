@@ -1,28 +1,3 @@
----
-title: "Distribution of Precipitation in a Interactive Map"
-author: Zixuan Chen
----
-
-# Introduction
-
-The precipitation is the most important data in the hydrology modeling. Analysis the precipitation data could improve the model. In this project, the interactive map could show the distribution of precipitation in the New York State. All the data is from the USGS, there are 35 stations were used in the project. The interactive map could indicate the mean, maximum, and minimum precipitation for each station. Also, the time series plots could illustrate the trend of the precipitation. 
-
-# Materials and methods
-
-All of the data is from the USGS. The period of each data is varied based on the station. The interval time is 15 minutes, thus it is important that transform the data to daily points.
-The processes are descried in following steps.
-
-
-* Download the data from the URL of USGS directly.
-* Data cleaning.
-* Insert the spatial information to each data point.
-* Time series plots and summarized table.
-* Combined plots and tables with interactive map.
-
-
-Load the necessary packages:
-
-```{r, message=F, warning=F}
 library(leaflet)
 library(ggplot2)
 library(tidyverse)
@@ -30,12 +5,11 @@ library(mapview)
 library(leafpop)
 library(sf)
 library(lubridate)
-library(kableExtra)
-```
 
-# Download and clean all required data :
 
-```{r, message=F, warning=F}
+################################################################################
+
+#Import and clean precipitation data
 ##S1
 S1 = read.delim("https://nwis.waterdata.usgs.gov/ny/nwis/uv/?cb_00045=on&format=rdb&site_no=01359165&period=&begin_date=2018-12-14&end_date=2020-10-17",
                 skip = 28,
@@ -423,37 +397,22 @@ S_35 = S_35%>%
   group_by(Date,Station_N)%>%
   summarise(sum= sum(P))%>%
   filter(sum != 0)
-```
-
-Combined those data together:
-```{r}
-all_sta = do.call("rbind",list(S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,
-                               S11,S12,S13,S14,S15,S16,S17,S18,
-                               S19,S_20,S_21,S_22,S_23,S_24,S_25,
-                               S_26,S_27,S_28,S_29,S_30,S_31,S_32,S_33,
-                               S_34,S_35))
-all_sta%>%
-  head(10)%>%
-  kable(digits = 2, align = 'c')%>%
-  kable_styling(bootstrap_options = 
-                  c("striped", "hover", "condensed", "responsive"))
-```
 
 
-# Plots:
+################################################################################
 
-```{r, echo = F}
-all_sta_list = list(S12,S_28,S_31,S_25,S1,S17,S18,S_32,S_33,S_30,S_34,
-                    S11,S10,S2,S_26,S_27,S3,S4,S_29,
-                    S19,S_24,S16,S7,S8,S9,S5,
-                    S6,S_23,S_35,S_20,S_21,S14,S_22,S15,
-                    S13)
+#Plot
+all_sta_list = list(S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,
+                    S11,S12,S13,S14,S15,S16,S17,S18,
+                    S19,S_20,S_21,S_22,S_23,S_24,S_25,
+                    S_26,S_27,S_28,S_29,S_30,S_31,S_32,S_33,
+                    S_34,S_35)
 all_pt = list()
 for (i in 1:35){
   pt=as.data.frame(all_sta_list[i])
   m=ggplot(pt,aes(as.Date(Date),sum))+
     geom_point(col = "red")+
-    geom_smooth(method = 'loess',formula = y ~ x)+
+    geom_smooth()+
     scale_x_date(date_labels = "%m-%Y")+
     labs(x="Date",
          y="Daily Precipitation (inches)",
@@ -463,22 +422,16 @@ for (i in 1:35){
   file_name = paste("S",i,".png",sep = "")
   #ggsave(file_name)
 }
-```
+################################################################################
+all_sta = do.call("rbind",list(S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,
+                               S11,S12,S13,S14,S15,S16,S17,S18,
+                               S19,S_20,S_21,S_22,S_23,S_24,S_25,
+                               S_26,S_27,S_28,S_29,S_30,S_31,S_32,S_33,
+                               S_34,S_35))
 
-Example:
-```{r, warning= F}
-plot(all_pt[[1]])
-```
-
-Add the spatial information and summarized the data:
-```{r}
+#Import data and transform them to Spatial data
 station = read_csv("E:/UB/Spatial Data Science/info.csv",
                    col_types = "cddd")
-station%>%
-  slice(1:10)%>%
-  kable(digits = 2, align = 'c')%>%
-  kable_styling(bootstrap_options = 
-                  c("striped", "hover", "condensed", "responsive"))
 
 station = station%>%
   mutate(Station_N = as.character(Station_N))
@@ -488,17 +441,7 @@ all_sta_info = all_sta%>%
             Max = max(sum),
             Min = min(sum))%>%
   left_join(station,.by="Station_N")
-all_sta_info %>% 
-  slice(1:35) %>% #show only 1:n rows
-  kable(digits=2,align="c")%>% 
-  kable_styling(bootstrap_options = 
-                  c("striped", "hover", "condensed", "responsive"))
-```
-# Results
 
-Transform the data to the spatial data prepared for the interactive map. 
-
-```{r, fig.width=9, fig.height=6, fig.cap="Map of Precipitation in NY"}
 all_sta_geo = st_as_sf(all_sta_info, coords = c("x", "y"), crs = 4326)
 
 all_sta_info = all_sta_info%>%
@@ -513,16 +456,8 @@ m = leaflet() %>%
                    group = "Plot",
                    popup = popupGraph(all_pt,type = "png"))%>%
   addLayersControl(overlayGroups = c("Information","Plot"))
-m  # a map with the default OSM tile layer
-```
 
+#m = mapview(station, map.types = "Esri.WorldImagery",
+#            popup = popupImage("E:/UB/Spatial Data Science/geo511-2020-tasks-Zixuan0127/S1.png", src = "remote"))
+print(m)
 
-
-
-# Conclusions
-
-This project visualize the distribution of precipitation in New York State. Those plots indicated a trend of precipitation for each station directly. Also, the information table summarized the basic information of precipitation, like mean, maximum, and minimum. The interactive map are more readable, it could show the trend and spatial distribution synchronously.
-
-# References
-
-All sources are cited in a consistent manner
