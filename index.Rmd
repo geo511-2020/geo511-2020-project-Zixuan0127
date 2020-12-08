@@ -1,5 +1,5 @@
 ---
-title: "Distribution of Precipitation in a Interactive Map"
+title: "Distribution of Precipitation in an Interactive Map"
 author: Zixuan Chen
 ---
 
@@ -442,7 +442,7 @@ all_sta%>%
 
 # Plots:
 
-```{r, echo = F}
+```{r}
 all_sta_list = list(S12,S_28,S_31,S_25,S1,S17,S18,S_32,S_33,S_30,S_34,
                     S11,S10,S2,S_26,S_27,S3,S4,S_29,
                     S19,S_24,S16,S7,S8,S9,S5,
@@ -498,7 +498,7 @@ all_sta_info %>%
 
 Transform the data to the spatial data prepared for the interactive map. 
 
-```{r, fig.width=9, fig.height=6, fig.cap="Map of Precipitation in NY"}
+```{r, fig.width=8, fig.height=6, fig.cap="Map of Precipitation in NY", warning = F}
 all_sta_geo = st_as_sf(all_sta_info, coords = c("x", "y"), crs = 4326)
 
 all_sta_info = all_sta_info%>%
