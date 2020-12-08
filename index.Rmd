@@ -525,4 +525,4 @@ This project visualize the distribution of precipitation in New York State. Thos
 
 # References
 
-All sources are cited in a consistent manner
+All sources are cited in a consistent manner.
